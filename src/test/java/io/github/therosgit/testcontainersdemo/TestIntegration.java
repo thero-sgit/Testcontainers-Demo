@@ -5,6 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -20,12 +21,14 @@ import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 @ActiveProfiles("test")
 public abstract class TestIntegration {
     // Postgres Container Setup
+    @Container
     static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:16-alpine")
             .withDatabaseName("testPostgres")
             .withUsername("testUsername")
             .withPassword("testPassword");
 
     // S3 Container Setup
+    @Container
     static LocalStackContainer localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
             .withServices("s3");
 
@@ -34,6 +37,8 @@ public abstract class TestIntegration {
     static  {
         postgreSQLContainer.start();
         localStackContainer.start();
+
+        createBucket();
     }
 
     // Override properties
@@ -52,7 +57,6 @@ public abstract class TestIntegration {
         );
     }
 
-    @BeforeAll
     static void createBucket() {
         S3Client s3Client = S3Client
                 .builder()
